@@ -1,54 +1,63 @@
-#include <ncurses.h> 
-#include <unistd.h> 
-#include <vector> 
-#include <cstdlib> 
+#include <ncurses.h> //includes the ncurses library to control terminal screen, input-output
+#include <unistd.h> //includes functions t delay execution
+#include <vector> //rom stl
+#include <cstdlib> // to get functions like rand() and srand()
 #include <ctime> 
-#include <algorithm>
+#include <algorithm>//provides functions which if were not there then we would have to code ourselves like find(), sort()
 
 using namespace std;
 
 // Directions 
-enum Direction { UP, DOWN, LEFT, RIGHT };
+enum Direction { UP, DOWN, LEFT, RIGHT };//enum is used to define the constant possible movement direction
 
-// ---------------- Snake ---------------- 
-class Snake { private: vector<pair<int,int>> body; // (y, x) 
-Direction dir;
+// ---------------- Snake ---------------- WE MAKE THE FIRST CLASS SNAKE.........(1)
+class Snake { 
+private: 
+vector<pair<int,int>> body; // (y, x) // create a vector to store the x,y coordinates of the snake
+Direction dir;//dir from Direction class(enum) used to store the current direction of the snake
 
-public: Snake(int startY, int startX) { body.push_back({startY, startX}); body.push_back({startY, startX - 1}); body.push_back({startY, startX - 2}); dir = RIGHT; }
+public: 
+Snake(int startY, int startX) { // making a constructor that is used to initialise the current position of the snake
+body.push_back({startY, startX}); //adds the head segment
+body.push_back({startY, startX - 1});// adds the second segment to the left
+body.push_back({startY, startX - 2});//adds the third segment to he left
+//from this the snake moves to the left
+dir = RIGHT;//initial direction is right
+}
 
-void setDirection(Direction d) {
+void setDirection(Direction d) {//define a member function to change the direction of the snake based on the relation b/w dir and d
     // Prevent reversing direction
-    if ((dir == UP && d == DOWN) || (dir == DOWN && d == UP) ||
-        (dir == LEFT && d == RIGHT) || (dir == RIGHT && d == LEFT))
-        return;
-    dir = d;
+    if ((dir == UP && d == DOWN) || (dir == DOWN && d == UP) ||//checks for reverse direction vertically
+        (dir == LEFT && d == RIGHT) || (dir == RIGHT && d == LEFT))//checks for reverse direction horizontally
+        return;// to ignore the irrelevant reverse moves
+    dir = d;//except the reverse case updates the direction
 }
 
-pair<int,int> getHead() const {
-    return body.front();
+pair<int,int> getHead() const {//returns the coord of the head
+    return body.front();//returs the first element of the vector body
 }
 
-const vector<pair<int,int>>& getBody() const {
-    return body;
+const vector<pair<int,int>>& getBody() const {//returns reference to snake body
+    return body;//returns the vector
 }
 
-void move(bool grow = false) {
-    pair<int,int> head = body.front();
+void move(bool grow = false) {//a member function to move the snake
+    pair<int,int> head = body.front();//copies the current head
 
-    switch (dir) {
-        case UP:    head.first--; break;
+    switch (dir) {//using the swtch statement to check the current  of the snake
+        case UP:    head.first--; break;//actions according to diff directions, like when dir = up: move the coord to up
         case DOWN:  head.first++; break;
         case LEFT:  head.second--; break;
         case RIGHT: head.second++; break;
     }
 
-    body.insert(body.begin(), head);
-    if (!grow) body.pop_back();
+    body.insert(body.begin(), head);//adds new heads at front
+    if (!grow) body.pop_back();//removes tail unless the snake's body is growing
 }
 
-bool selfCollision() const {
-    pair<int,int> head = body.front();
-    for (size_t i = 1; i < body.size(); i++) {
+bool selfCollision() const {//member function which checks onto the collision of the snake with itself
+    pair<int,int> head = body.front();//getting the coord of the head
+    for (size_t i = 1; i < body.size(); i++) {//to check whether any part of the body collides with the head or not....if collides then coord of that part and that of head becomes same
         if (body[i] == head) return true;
     }
     return false;
