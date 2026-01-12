@@ -66,47 +66,57 @@ bool selfCollision() const {//member function which checks onto the collision of
 };
 
 // ---------------- Food ---------------- 
-class Food { private: int y, x;
+class Food {//starts food class
+private: 
+int y, x;//represents food's position
 
-public: Food() : y(0), x(0) {}
+public: 
+Food() : y(0), x(0) {}//constructor: initialises food's coord
 
-void spawn(int height, int width, const vector<pair<int,int>>& snakeBody) {
+void spawn(int height, int width, const vector<pair<int,int>>& snakeBody) {//uses rand() function to place the food at any random coord
     while (true) {
-        y = rand() % (height - 2) + 1;
-        x = rand() % (width - 2) + 1;
+        y = rand() % (height - 2) + 1;//random y inside the border
+        x = rand() % (width - 2) + 1;//eandom x inside the border
 
-        if (find(snakeBody.begin(), snakeBody.end(), make_pair(y, x)) == snakeBody.end())
-            break;
+        if (find(snakeBody.begin(), snakeBody.end(), make_pair(y, x)) == snakeBody.end())//compares the coord of the food the that if the snake
+            break;//make_pair() is a std function used to create an object of type int....this if used so that we can compare both x and y together
     }
 }
 
-int getY() const { return y; }
+int getY() const { return y; }//returns the x and y coord
 int getX() const { return x; }
 
 };
 
 // ---------------- Game ---------------- 
-class Game { private: int height, width; int score; bool gameOver;
+class Game { //
+private: 
+int height, width;//screen;s dimensions
+int score;
+bool gameOver;//state of the game
 
-Snake snake;
-Food food;
+Snake snake;//instance attribute of class snake
+Food food;//instance attribute of the class food
 
-public: Game(int h, int w) : height(h), width(w), score(0), gameOver(false), snake(h/2, w/2) { food.spawn(height, width, snake.getBody()); }
+public: 
+Game(int h, int w) : height(h), width(w), score(0), gameOver(false), snake(h/2, w/2) { //constructor used for initiallisation
+food.spawn(height, width, snake.getBody());//spawns food
+}
 
-void drawBorder() {
+void drawBorder() {//member function to draw the border
     for (int x = 0; x < width; x++) {
-        mvprintw(0, x, "#");
-        mvprintw(height-1, x, "#");
-    }
+        mvprintw(0, x, "#");//a ncurses function: used to move the cursor to a specific position on the terminal and print whatever is to be printed there
+        mvprintw(height-1, x, "#"); its format is mvprintw(int y, int x, const char "tpo be printed")
+    }//for loops to make border along both x and y axis
     for (int y = 0; y < height; y++) {
         mvprintw(y, 0, "#");
         mvprintw(y, width-1, "#");
     }
 }
 
-void handleInput() {
-    int ch = getch();
-    switch (ch) {
+void handleInput() {//member function used to read input from the key board
+    int ch = getch();//a function from ncurses that reads a single key press from the keyboard
+    switch (ch) {//using the switch statement
         case KEY_UP:
         case 'w': snake.setDirection(UP); break;
         case KEY_DOWN:
@@ -119,77 +129,78 @@ void handleInput() {
     }
 }
 
-void update() {
-    pair<int,int> head = snake.getHead();
+void update() {//member function to update the games logic
+    pair<int,int> head = snake.getHead();//find the coord of head
     bool grow = false;
 
     // Check food collision
-    if (head.first == food.getY() && head.second == food.getX()) {
+    if (head.first == food.getY() && head.second == food.getX()) {//check if food is eaten or not
         score += 10;
         grow = true;
-        food.spawn(height, width, snake.getBody());
+        food.spawn(height, width, snake.getBody());//spawn new food
     }
 
-    snake.move(grow);
-    head = snake.getHead();
+    snake.move(grow);//move the snake
+    head = snake.getHead();//update the coord of the head
 
     // Wall collision
-    if (head.first <= 0 || head.first >= height-1 ||
-        head.second <= 0 || head.second >= width-1) {
-        gameOver = true;
+    if (head.first <= 0 || head.first >= height-1 ||//collision with vertical wall
+        head.second <= 0 || head.second >= width-1) {//collision with the horizontal wall
+        gameOver = true;// if collision occured then game is over
     }
 
     // Self collision
     if (snake.selfCollision()) {
-        gameOver = true;
+        gameOver = true;if collision occured with itself then game is over
     }
 }
 
-void draw() {
-    clear();
+void draw() {// member function to draw the frame
+    clear();//clear the screen
     drawBorder();
 
     // Draw snake
-    for (auto &p : snake.getBody()) {
-        mvprintw(p.first, p.second, "O");
+    for (auto &p : snake.getBody()) {//iterate the sanke
+        mvprintw(p.first, p.second, "O");// draw the snakes body
     }
 
     // Draw food
     mvprintw(food.getY(), food.getX(), "*");
 
-    mvprintw(height, 2, "Score: %d", score);
-    refresh();
+    mvprintw(height, 2, "Score: %d", score);//craw the score
+    refresh();//update the terminal
 }
 
-void gameOverScreen() {
+void gameOverScreen() {//member function to end the game
     clear();
     mvprintw(height/2 - 1, width/2 - 5, "GAME OVER");
     mvprintw(height/2, width/2 - 7, "Final Score: %d", score);
     mvprintw(height/2 + 2, width/2 - 14, "Press R to Restart or Q to Quit");
     refresh();
 
-    nodelay(stdscr, FALSE);
+    nodelay(stdscr, FALSE);//a function from ncurses that controls whether input ncurses functions like getch() should wait for user's input or not
+    //syntax = int nodelay(win, bf)// win: the window whose input mode is to be changed (here srdscr means the main screen) and bf means boolean flag (TRUE/FALSE)
     while (true) {
-        int ch = getch();
+        int ch = getch();//reading the keys
         if (ch == 'q' || ch == 'Q') break;
         if (ch == 'r' || ch == 'R') {
-            score = 0;
+            score = 0;//restart
             gameOver = false;
             snake = Snake(height/2, width/2);
             food.spawn(height, width, snake.getBody());
             nodelay(stdscr, TRUE);
-            run();
+            run();//restart the game
             return;
         }
     }
 }
 
-void run() {
+void run() {//member function to run the game
     while (!gameOver) {
         handleInput();
         update();
         draw();
-        usleep(120000);
+        usleep(120000);//delay
     }
     gameOverScreen();
 }
@@ -197,11 +208,12 @@ void run() {
 };
 
 // ---------------- main ---------------- 
-int main() { srand(time(NULL));
-initscr();
-noecho();
-curs_set(0);
-keypad(stdscr, TRUE);
+int main() { 
+srand(time(NULL));// a function which seeds the random number generator using the current time
+initscr();//INITIALIZES THE NCURSES SYSTEM
+noecho();//when you press the keys they will not be printed on the screen but still be implemented
+curs_set(0);//hides the blinking curser
+keypad(stdscr, TRUE);//enable the special keys like the arrow keys for the main screen 
 nodelay(stdscr, TRUE);
 
 int height = 25;
@@ -210,7 +222,7 @@ int width = 60;
 Game game(height, width);
 game.run();
 
-endwin();
+endwin();// ends the ncurses mode and restores the normal terminal
 return 0;
 
 }
